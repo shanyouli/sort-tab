@@ -594,9 +594,6 @@ If you want buffer hide, return t, or return nil.")
 (defun sort-tab-bury-buffer-advisor (&optional arg)
   (sort-tab-update-list))
 
-(advice-add #'kill-buffer :around #'sort-tab-kill-buffer-advisor)
-(advice-add #'bury-buffer :after #'sort-tab-bury-buffer-advisor)
-(advice-add #'unbury-buffer :after #'sort-tab-update-list)
 
 (defun initialize-sort-tab-delay (&optional frame)
   (run-with-idle-timer 0 nil 'sort-tab-turn-on))
@@ -618,13 +615,20 @@ Returns non-nil if the new state is enabled.
 
         ;; Add hook for emacs daemon.
         (when (and (fboundp 'daemonp) (daemonp))
-          (add-hook 'after-make-frame-functions #'initialize-sort-tab-delay t)))
+          (add-hook 'after-make-frame-functions #'initialize-sort-tab-delay t))
+
+        (advice-add #'kill-buffer :around #'sort-tab-kill-buffer-advisor)
+        (advice-add #'bury-buffer :after #'sort-tab-bury-buffer-advisor)
+        (advice-add #'unbury-buffer :after #'sort-tab-update-list))
     (sort-tab-turn-off)
 
     ;; Remove hook for emacs daemon.
     (when (and (fboundp 'daemonp) (daemonp))
-      (remove-hook 'after-make-frame-functions #'initialize-sort-tab-delay)
-      )))
+      (remove-hook 'after-make-frame-functions #'initialize-sort-tab-delay))
+
+    (advice-remove #'kill-buffer #'sort-tab-kill-buffer-advisor)
+    (advice-remove #'bury-buffer #'sort-tab-bury-buffer-advisor)
+    (advice-remove #'unbury-buffer #'sort-tab-update-list)))
 
 (provide 'sort-tab)
 
